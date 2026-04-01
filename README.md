@@ -8,19 +8,31 @@
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [How It Works](#how-it-works)
-- [Prerequisites](#prerequisites)
-- [LinkedIn App Setup](#linkedin-app-setup)
-- [Installation](#installation)
-- [Finding Your LinkedIn Person URN](#finding-your-linkedin-person-urn)
-- [Running the Poster](#running-the-poster)
-- [Scheduling Options](#scheduling-options)
-- [Customising Your Posts](#customising-your-posts)
-- [Token Lifecycle](#token-lifecycle)
-- [Project Structure](#project-structure)
-- [Troubleshooting](#troubleshooting)
-- [Known Gotchas](#known-gotchas)
+- [LinkedIn AI Daily Poster](#linkedin-ai-daily-poster)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [How It Works](#how-it-works)
+  - [Prerequisites](#prerequisites)
+  - [LinkedIn App Setup](#linkedin-app-setup)
+    - [Step 1 — Create a Company Page (if you don't have one)](#step-1--create-a-company-page-if-you-dont-have-one)
+    - [Step 2 — Create a Developer App](#step-2--create-a-developer-app)
+    - [Step 3 — Add Required Products](#step-3--add-required-products)
+    - [Step 4 — Add Redirect URI](#step-4--add-redirect-uri)
+    - [Step 5 — Copy credentials to `.env`](#step-5--copy-credentials-to-env)
+  - [Installation](#installation)
+  - [Finding Your LinkedIn Person URN](#finding-your-linkedin-person-urn)
+    - [Option A — Automatic (recommended)](#option-a--automatic-recommended)
+    - [Option B — From page source](#option-b--from-page-source)
+    - [Option C — From the API error message](#option-c--from-the-api-error-message)
+  - [Running the Poster](#running-the-poster)
+  - [Scheduling Options](#scheduling-options)
+    - [Option A — macOS launchd (recommended)](#option-a--macos-launchd-recommended)
+    - [Option B — Cron](#option-b--cron)
+    - [Option C — GitHub Actions (cloud / no Mac required)](#option-c--github-actions-cloud--no-mac-required)
+  - [Customising Your Posts](#customising-your-posts)
+  - [Token Lifecycle](#token-lifecycle)
+  - [Project Structure](#project-structure)
+  - [License](#license)
 
 ---
 
@@ -308,29 +320,6 @@ linkedin-autoposter/
 └── posts.db                     # SQLite post history (auto-created, git-ignored)
 ```
 
----
-
-## Troubleshooting
-
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `HTTP 426 NONEXISTENT_VERSION` | `LinkedIn-Version` header is expired | Update `LinkedIn-Version` in `src/linkedin_client.py` to current `YYYYMM` |
-| `HTTP 403` on POST | Missing `w_member_social` scope | Add **"Share on LinkedIn"** product in LinkedIn Developer Portal, then re-run `oauth_setup.py` |
-| `HTTP 422 DUPLICATE_POST` | Same content posted twice (usually a retry after a silent 201) | Already handled — duplicate detection in `post_tracker.py` |
-| `Person URN not found` in OAuth | `w_member_social` alone doesn't expose profile | Add **"Sign In with LinkedIn using OpenID Connect"** product, or set URN manually — see [Finding Your Person URN](#finding-your-linkedin-person-urn) |
-| `conda run` uses wrong Python | Homebrew Python on PATH overrides conda env | Use `/opt/miniconda3/envs/linkedin-autoposter/bin/python` directly |
-| `ModuleNotFoundError: dotenv` | Same as above — wrong Python | Use full path to conda env Python |
-
----
-
-## Known Gotchas
-
-See [`tasks/lessons.md`](tasks/lessons.md) for the full debugging journal. Key points:
-
-- **LinkedIn REST API uses alphanumeric Person URNs** — the numeric ID from your profile URL (`urn:li:member:12345`) maps to an alphanumeric form (`urn:li:person:abcXYZ`). Use the alphanumeric form in `.env`.
-- **LinkedIn 201 response has an empty body** — the post URN is in the `x-restli-id` response header, not the body.
-- **`LinkedIn-Version` header has a shelf life** — bump it to the current `YYYYMM` when you see a 426 error.
-- **Both LinkedIn products are required** — "Share on LinkedIn" for posting + "Sign In with OpenID Connect" for auto-detecting your Person URN.
 
 ---
 
