@@ -13,6 +13,8 @@ import os
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).parent.parent
+
 # ── Logging setup ─────────────────────────────────────────────────
 LOG_DIR = Path(__file__).parent.parent / "logs"
 LOG_DIR.mkdir(exist_ok=True)
@@ -107,13 +109,13 @@ def run(dry_run: bool = False) -> None:
         update_post_status(row_id, "posted", linkedin_urn=urn)
         logger.info("✅ Posted successfully. LinkedIn URN: %s", urn)
 
-        # Auto-comment: wait then post a follow-up comment to seed engagement
+        # Generate comment and save for review — posted separately after approval
         comment_text = generate_comment(post_text)
         if comment_text:
-            logger.info("Waiting %ds before posting auto-comment…", config.COMMENT_DELAY_SECONDS)
-            import time
-            time.sleep(config.COMMENT_DELAY_SECONDS)
-            create_comment(urn, comment_text, person_urn)
+            comment_file = ROOT / "comment_draft.txt"
+            comment_file.write_text(f"POST_URN={urn}\nPERSON_URN={person_urn}\n---\n{comment_text}\n")
+            logger.info("Comment draft saved to %s", comment_file)
+            logger.info("Proposed comment:\n%s", comment_text)
 
     except Exception as exc:
         update_post_status(row_id, "failed", error=str(exc))
