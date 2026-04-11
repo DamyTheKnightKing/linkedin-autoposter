@@ -19,3 +19,9 @@ build/
 
 # Node / Remotion
 remotion/node_modules/
+
+# Generated images (runtime output)
+images/
+
+# IDE / Claude local settings
+.claude/settings.local.json
