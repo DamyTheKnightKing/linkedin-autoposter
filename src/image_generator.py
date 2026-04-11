@@ -214,11 +214,8 @@ def _add_branding_overlay(image_path: Path, topic: str, source: str) -> None:
         font_small = font_bold
 
     topic_display = topic.replace("_", " ").title()
-    handle = os.getenv("LINKEDIN_HANDLE", "")
-    handle_text = f"@{handle}" if handle else "LinkedIn Autoposter"
 
-    draw.text((20, h - bar_h + 10), f"#{topic_display}", font=font_bold, fill=(255, 255, 255, 230))
-    draw.text((20, h - bar_h + 36), handle_text, font=font_small, fill=(180, 180, 180, 200))
+    draw.text((20, h - bar_h + 18), f"#{topic_display}", font=font_bold, fill=(255, 255, 255, 230))
 
     # Attribution badge (top-right)
     badge_text = "AI" if source in ("openrouter", "hf_flux") else "Card"
@@ -251,7 +248,7 @@ def _extract_via_openrouter(post_text: str, topic: str) -> dict:
     from openai import OpenAI
 
     api_key = os.environ.get("OPENROUTER_API_KEY", "")
-    model   = os.environ.get("OPENROUTER_MODEL", "meta-llama/llama-4-maverick:free")
+    model   = os.environ.get("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
     if not api_key:
         raise RuntimeError("OPENROUTER_API_KEY not set")
 

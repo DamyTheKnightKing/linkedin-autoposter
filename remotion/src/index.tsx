@@ -8,7 +8,6 @@ const defaultProps: PostCardProps = {
   insight:
     "Truncate from the middle, never the end. Keep system prompt + last 3 turns intact.",
   topic: "ai_tips",
-  author: "Principal Data & AI Architect",
 };
 
 export const RemotionRoot: React.FC = () => {

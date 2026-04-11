@@ -22,14 +22,12 @@ export interface PostCardProps {
   headline: string;
   insight: string;
   topic: string;
-  author?: string;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
   headline,
   insight,
   topic,
-  author = "Principal Data & AI Architect",
 }) => {
   const accent = TOPIC_COLORS[topic] ?? "#6366f1";
   const topicLabel = TOPIC_LABELS[topic] ?? topic;
@@ -138,7 +136,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         ) : null}
       </div>
 
-      {/* Bottom: Author + brand */}
+      {/* Bottom: Topic label + brand */}
       <div
         style={{
           display: "flex",
@@ -148,31 +146,21 @@ export const PostCard: React.FC<PostCardProps> = ({
           paddingTop: 28,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          {/* Avatar circle */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Topic pill */}
           <div
             style={{
-              width: 52,
-              height: 52,
-              borderRadius: "50%",
-              background: `linear-gradient(135deg, ${accent}, ${accent}88)`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-              fontSize: 22,
-              fontWeight: 700,
+              background: `${accent}22`,
+              border: `1px solid ${accent}66`,
+              borderRadius: 8,
+              padding: "6px 16px",
+              color: accent,
+              fontSize: 18,
+              fontWeight: 600,
+              letterSpacing: "0.03em",
             }}
           >
-            D
-          </div>
-          <div>
-            <div style={{ color: "#fff", fontSize: 22, fontWeight: 600 }}>
-              Dhamodharan Palanisamy
-            </div>
-            <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 18 }}>
-              {author}
-            </div>
+            #{topicLabel}
           </div>
         </div>
 
