@@ -3,10 +3,10 @@ Image generation for LinkedIn posts.
 
 Two modes (controlled by ENABLE_AI_IMAGES env var):
 
-1. AI Image Mode (ENABLE_AI_IMAGES=true) — NEW:
+1. AI Image Mode (ENABLE_AI_IMAGES=true):
    - generate_ai_post_image() generates a contextual AI image for the post
-   - Pipeline: OpenRouter image API → HF FLUX.1-schnell → Remotion card fallback
-   - Pillow composites a branding overlay (topic badge + handle) on the AI image
+   - Pipeline: Pollinations.ai (no key) → HF FLUX.1-schnell → text-only fallback
+   - Pillow composites a branding overlay (topic badge + @handle) on AI images
 
 2. Remotion Mode (ENABLE_AI_IMAGES=false, default):
    - extract_image_props() extracts headline + insight (via OpenRouter, Gemini fallback)
@@ -47,11 +47,12 @@ def generate_ai_post_image(post_text: str, topic: str, output_path: Optional[Pat
     Generate a contextual AI image for a LinkedIn post.
 
     Pipeline:
-        1. HuggingFace FLUX.1-schnell (free, Apache 2.0)
-        2. Fallback → Remotion card (existing branded design)
+        1. Pollinations.ai — no API key, instant, free
+        2. HuggingFace FLUX.1-schnell — higher quality, needs HF_TOKEN
+        3. Text-only fallback (returns None → caller posts without image)
 
     A Pillow branding overlay (topic badge + @handle) is composited on AI images.
-    Returns path to the final PNG.
+    Returns path to the final PNG, or None if all sources fail.
     """
     if output_path is None:
         IMAGE_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -62,22 +63,29 @@ def generate_ai_post_image(post_text: str, topic: str, output_path: Optional[Pat
     image_prompt = _build_image_prompt(post_text, topic)
 
     raw_image: Optional[bytes] = None
-    source = "remotion"
+    source = "unknown"
 
-    # Layer 1: HuggingFace FLUX.1-schnell (free, Apache 2.0)
-    # Note: OpenRouter does not support image generation — HF FLUX is the primary AI source.
+    # Layer 1: Pollinations.ai — no API key, no signup, truly free
     try:
-        raw_image = _generate_image_hf_flux(image_prompt)
-        source = "hf_flux"
-        logger.info("AI image generated via HF FLUX.1-schnell")
+        raw_image = _generate_image_pollinations(image_prompt)
+        source = "pollinations"
+        logger.info("AI image generated via Pollinations.ai")
     except Exception as exc:
-        logger.warning("HF FLUX failed (%s), falling back to Remotion card.", exc)
+        logger.warning("Pollinations failed (%s), trying HF FLUX...", exc)
 
-    # Layer 3: Remotion card fallback
+    # Layer 2: HuggingFace FLUX.1-schnell
     if raw_image is None:
-        logger.info("All AI image sources failed — using Remotion card fallback")
-        props = extract_image_props(post_text, topic)
-        return generate_image(props, output_path)
+        try:
+            raw_image = _generate_image_hf_flux(image_prompt)
+            source = "hf_flux"
+            logger.info("AI image generated via HF FLUX.1-schnell")
+        except Exception as exc:
+            logger.warning("HF FLUX failed (%s) — will post text-only.", exc)
+
+    # All sources failed — caller handles text-only posting
+    if raw_image is None:
+        logger.warning("All AI image sources failed — skipping image")
+        return None
 
     # Save raw AI image
     output_path.write_bytes(raw_image)
@@ -115,6 +123,33 @@ def _build_image_prompt(post_text: str, topic: str) -> str:
         "No text, no words, no watermarks. Photorealistic or minimal illustration. "
         "Wide format 1200x627 aspect ratio."
     )
+
+
+def _generate_image_pollinations(prompt: str) -> bytes:
+    """
+    Generate image via Pollinations.ai — completely free, no API key required.
+    Uses FLUX model. Returns raw PNG bytes.
+    """
+    import urllib.parse
+    import requests
+
+    # Pollinations serves images at a stable URL — encode prompt, fetch PNG
+    encoded = urllib.parse.quote(prompt)
+    # width=1200 height=627 for LinkedIn OG ratio; nologo=true, seed for variety
+    seed = int(time.time()) % 10000
+    url = (
+        f"https://image.pollinations.ai/prompt/{encoded}"
+        f"?width=1200&height=627&model=flux&nologo=true&seed={seed}"
+    )
+
+    resp = requests.get(url, timeout=60)
+    resp.raise_for_status()
+
+    content_type = resp.headers.get("Content-Type", "")
+    if "image" not in content_type:
+        raise RuntimeError(f"Pollinations returned non-image content-type: {content_type}")
+
+    return resp.content
 
 
 def _generate_image_hf_flux(prompt: str) -> bytes:
@@ -165,7 +200,7 @@ def _add_branding_overlay(image_path: Path, topic: str, source: str) -> None:
     draw.text((20, h - bar_h + 18), f"#{topic_display}", font=font_bold, fill=(255, 255, 255, 230))
 
     # Attribution badge (top-right)
-    badge_text = "AI" if source == "hf_flux" else "Card"
+    badge_text = "AI" if source in ("pollinations", "hf_flux") else "Card"
     draw.rectangle([(w - 60, 10), (w - 10, 44)], fill=(79, 70, 229, 200))  # indigo
     draw.text((w - 50, 16), badge_text, font=font_small, fill=(255, 255, 255, 255))
 
