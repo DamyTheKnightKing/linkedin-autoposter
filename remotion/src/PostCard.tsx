@@ -164,17 +164,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           </div>
         </div>
 
-        {/* LinkedIn wordmark area */}
-        <div
-          style={{
-            color: "rgba(255,255,255,0.25)",
-            fontSize: 18,
-            fontWeight: 500,
-            letterSpacing: "0.08em",
-          }}
-        >
-          linkedin-autoposter
-        </div>
+
       </div>
     </AbsoluteFill>
   );
