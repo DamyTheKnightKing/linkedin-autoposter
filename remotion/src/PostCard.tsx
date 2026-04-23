@@ -1,65 +1,132 @@
 import React from "react";
 import { AbsoluteFill } from "remotion";
 
+// ── Syntax token colours (GitHub Dark palette) ─────────────────────────────────
+const C = {
+  keyword: "#ff7b72",
+  string:  "#a5d6ff",
+  comment: "#8b949e",
+  func:    "#d2a8ff",
+  var:     "#e6edf3",
+  num:     "#79c0ff",
+  type:    "#ffa657",
+  muted:   "#8b949e",
+};
+
+type Token    = { t: string; c: string };
+type CodeLine = Token[];
+
 interface TopicTheme {
-  gradient: string;
-  accent: string;
-  orb1: string;
-  orb2: string;
-  orb3: string;
-  label: string;
+  accent:  string;
+  label:   string;
+  file:    string;
+  getCode: (headline: string, insight: string) => CodeLine[];
 }
 
 const TOPIC_THEMES: Record<string, TopicTheme> = {
   ai_tips: {
-    gradient: "linear-gradient(135deg, #09090f 0%, #14003d 45%, #0a1628 100%)",
-    accent: "#818cf8",
-    orb1: "rgba(99,102,241,0.55)",
-    orb2: "rgba(167,139,250,0.35)",
-    orb3: "rgba(59,130,246,0.22)",
-    label: "AI Tips & Tricks",
+    accent: "#3fb950",
+    label:  "AI Tips & Tricks",
+    file:   "llm_tips.py",
+    getCode: (headline, insight) => {
+      const cmt = insight.length > 60 ? insight.slice(0, 57) + "…" : insight;
+      return [
+        [{ t: "def ", c: C.keyword }, { t: "reduce_hallucinations", c: C.func }, { t: "(", c: C.var }, { t: "llm", c: C.type }, { t: ":", c: C.var }, { t: " Model", c: C.type }, { t: ") -> ", c: C.var }, { t: "str", c: C.type }, { t: ":", c: C.var }],
+        [{ t: `    # 💡 ${cmt}`, c: C.comment }],
+        [{ t: "    llm", c: C.var }, { t: ".", c: C.muted }, { t: "add_instruction", c: C.func }, { t: "(", c: C.var }, { t: `"If unsure, say 'I don't know'"`, c: C.string }, { t: ")", c: C.var }],
+        [{ t: "    ", c: C.var }, { t: "return", c: C.keyword }, { t: " llm", c: C.var }, { t: ".", c: C.muted }, { t: "query", c: C.func }, { t: "(", c: C.var }, { t: "grounded", c: C.type }, { t: "=", c: C.keyword }, { t: "True", c: C.num }, { t: ")", c: C.var }],
+        [{ t: "", c: C.var }],
+        [{ t: "# ✅ Result: 40% fewer hallucinations in production", c: C.comment }],
+      ];
+    },
   },
+
   claude_features: {
-    gradient: "linear-gradient(135deg, #0f0800 0%, #3d1800 45%, #1a0a00 100%)",
-    accent: "#fbbf24",
-    orb1: "rgba(245,158,11,0.55)",
-    orb2: "rgba(251,191,36,0.35)",
-    orb3: "rgba(234,88,12,0.22)",
-    label: "Claude Features",
+    accent: "#e3b341",
+    label:  "Claude Features",
+    file:   "claude_demo.py",
+    getCode: (headline, insight) => {
+      const cmt = insight.length > 55 ? insight.slice(0, 52) + "…" : insight;
+      return [
+        [{ t: "import", c: C.keyword }, { t: " anthropic", c: C.type }],
+        [{ t: `# 💡 ${cmt}`, c: C.comment }],
+        [{ t: "client", c: C.var }, { t: " = ", c: C.keyword }, { t: "anthropic", c: C.type }, { t: ".", c: C.muted }, { t: "Anthropic", c: C.func }, { t: "()", c: C.var }],
+        [{ t: "response", c: C.var }, { t: " = ", c: C.keyword }, { t: "client", c: C.var }, { t: ".messages.", c: C.muted }, { t: "create", c: C.func }, { t: "(", c: C.var }],
+        [{ t: "    model", c: C.var }, { t: "=", c: C.keyword }, { t: `"claude-opus-4-5"`, c: C.string }, { t: ",", c: C.var }],
+        [{ t: "    thinking", c: C.var }, { t: "={", c: C.var }, { t: `"type"`, c: C.string }, { t: ": ", c: C.var }, { t: `"enabled"`, c: C.string }, { t: ", ", c: C.var }, { t: `"budget_tokens"`, c: C.string }, { t: ": ", c: C.var }, { t: "8000", c: C.num }, { t: "})", c: C.var }],
+      ];
+    },
   },
+
   copilot_tricks: {
-    gradient: "linear-gradient(135deg, #000f08 0%, #002010 45%, #001a18 100%)",
-    accent: "#34d399",
-    orb1: "rgba(16,185,129,0.55)",
-    orb2: "rgba(52,211,153,0.35)",
-    orb3: "rgba(6,182,212,0.22)",
-    label: "GitHub Copilot",
+    accent: "#58a6ff",
+    label:  "GitHub Copilot",
+    file:   "copilot_tricks.md",
+    getCode: (headline, insight) => {
+      const cmt = insight.length > 55 ? insight.slice(0, 52) + "…" : insight;
+      return [
+        [{ t: "# GitHub Copilot — Power Shortcuts", c: C.comment }],
+        [{ t: `# 💡 ${cmt}`, c: C.comment }],
+        [{ t: "", c: C.var }],
+        [{ t: "Ctrl", c: C.keyword }, { t: "+", c: C.muted }, { t: "I", c: C.string }, { t: "          →  Inline edit / refactor", c: C.var }],
+        [{ t: "Ctrl", c: C.keyword }, { t: "+", c: C.muted }, { t: "Shift", c: C.string }, { t: "+", c: C.muted }, { t: "I", c: C.string }, { t: "    →  Open Copilot Chat", c: C.var }],
+        [{ t: "@workspace", c: C.func }, { t: "       →  Full codebase context", c: C.var }],
+        [{ t: "@terminal", c: C.func }, { t: "        →  Explain last error", c: C.var }],
+      ];
+    },
   },
+
   data_engineering_ai: {
-    gradient: "linear-gradient(135deg, #000714 0%, #001540 45%, #000c28 100%)",
-    accent: "#60a5fa",
-    orb1: "rgba(59,130,246,0.55)",
-    orb2: "rgba(96,165,250,0.35)",
-    orb3: "rgba(14,165,233,0.22)",
-    label: "Data Engineering + AI",
+    accent: "#39d353",
+    label:  "Data Engineering + AI",
+    file:   "quality_check.sql",
+    getCode: (headline, insight) => {
+      const cmt = insight.length > 52 ? insight.slice(0, 49) + "…" : insight;
+      return [
+        [{ t: `-- 💡 ${cmt}`, c: C.comment }],
+        [{ t: "SELECT", c: C.keyword }],
+        [{ t: "  pipeline_run_id,", c: C.var }],
+        [{ t: "  COUNT", c: C.func }, { t: "(*) ", c: C.var }, { t: "FILTER", c: C.keyword }, { t: " (", c: C.var }, { t: "WHERE", c: C.keyword }, { t: " quality_score ", c: C.var }, { t: "<", c: C.keyword }, { t: " 0.8", c: C.num }, { t: ")", c: C.var }, { t: " AS", c: C.keyword }, { t: " anomalies", c: C.var }],
+        [{ t: "FROM", c: C.keyword }, { t: " ai_quality_checks", c: C.type }],
+        [{ t: "GROUP BY", c: C.keyword }, { t: " 1", c: C.num }, { t: ";", c: C.var }],
+      ];
+    },
   },
+
   lessons_learned: {
-    gradient: "linear-gradient(135deg, #0f0008 0%, #2d0018 45%, #1a000e 100%)",
-    accent: "#f472b6",
-    orb1: "rgba(236,72,153,0.55)",
-    orb2: "rgba(244,114,182,0.35)",
-    orb3: "rgba(168,85,247,0.22)",
-    label: "Lessons Learned",
+    accent: "#d2a8ff",
+    label:  "Lessons Learned",
+    file:   "git.log",
+    getCode: (headline, insight) => {
+      const cmt = insight.length > 52 ? insight.slice(0, 49) + "…" : insight;
+      return [
+        [{ t: "$ git log --oneline --graph", c: C.func }],
+        [{ t: "* ", c: C.num }, { t: "a3f92b1 ", c: C.type }, { t: "fix: never deploy on a Friday again", c: C.var }],
+        [{ t: "* ", c: C.num }, { t: "8c21d04 ", c: C.type }, { t: "refactor: skip staging = 3hr incident", c: C.var }],
+        [{ t: "* ", c: C.num }, { t: "4e10ab2 ", c: C.type }, { t: `docs: ${cmt}`, c: C.var }],
+        [{ t: "", c: C.var }],
+        [{ t: "# 💀 Incident duration: 3 hrs   ✅ Resolution: rollback", c: C.comment }],
+      ];
+    },
   },
 };
 
 export interface PostCardProps {
   headline: string;
-  insight: string;
-  topic: string;
-  author?: string;
-  handle?: string;
+  insight:  string;
+  topic:    string;
+  author?:  string;
+  handle?:  string;
 }
+
+// Renders a single line of syntax-highlighted tokens
+const CodeRow: React.FC<{ line: CodeLine; fontSize: number }> = ({ line, fontSize }) => (
+  <div style={{ display: "flex", flexWrap: "wrap", lineHeight: 1.7, fontSize }}>
+    {line.map((tok, i) => (
+      <span key={i} style={{ color: tok.c, whiteSpace: "pre" }}>{tok.t}</span>
+    ))}
+  </div>
+);
 
 export const PostCard: React.FC<PostCardProps> = ({
   headline,
@@ -69,276 +136,200 @@ export const PostCard: React.FC<PostCardProps> = ({
   handle = "theknightcodes",
 }) => {
   const theme: TopicTheme = TOPIC_THEMES[topic] ?? TOPIC_THEMES.ai_tips;
-  const { gradient, accent, orb1, orb2, orb3, label } = theme;
+  const { accent, label, file, getCode } = theme;
 
-  const fontSize =
-    headline.length > 90 ? 44
-    : headline.length > 70 ? 52
-    : headline.length > 50 ? 60
-    : 70;
+  const codeFontSize = 17;
+  const headlineFontSize =
+    headline.length > 80 ? 38
+    : headline.length > 60 ? 44
+    : headline.length > 40 ? 50
+    : 56;
 
-  const initial = author.charAt(0).toUpperCase();
+  const codeLines = getCode(headline, insight);
+  const initial   = author.charAt(0).toUpperCase();
+
+  // Scanline stripe colour
+  const scanline = `rgba(${accent === "#3fb950" ? "63,185,80" : accent === "#e3b341" ? "227,179,65" : accent === "#58a6ff" ? "88,166,255" : accent === "#39d353" ? "57,211,83" : "210,168,255"},0.03)`;
 
   return (
     <AbsoluteFill
       style={{
-        background: gradient,
-        fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+        background: "#0d1117",
+        fontFamily: "'Cascadia Code','Fira Code','Consolas','Menlo',monospace",
         overflow: "hidden",
       }}
     >
-      {/* Aurora orb 1 — top-right primary glow */}
-      <div
+      {/* Scanlines */}
+      <AbsoluteFill
         style={{
-          position: "absolute",
-          top: -140,
-          right: -140,
-          width: 560,
-          height: 560,
-          borderRadius: "50%",
-          background: `radial-gradient(circle, ${orb1} 0%, transparent 68%)`,
-          filter: "blur(48px)",
+          backgroundImage: `repeating-linear-gradient(0deg,transparent,transparent 27px,${scanline} 27px,${scanline} 28px)`,
           pointerEvents: "none",
         }}
       />
 
-      {/* Aurora orb 2 — bottom-left secondary glow */}
+      {/* Ambient glow — top-right */}
       <div
         style={{
           position: "absolute",
-          bottom: -100,
-          left: -80,
-          width: 400,
-          height: 400,
+          top: -160,
+          right: -160,
+          width: 520,
+          height: 520,
           borderRadius: "50%",
-          background: `radial-gradient(circle, ${orb2} 0%, transparent 70%)`,
-          filter: "blur(36px)",
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Aurora orb 3 — center subtle depth */}
-      <div
-        style={{
-          position: "absolute",
-          top: 60,
-          left: "42%",
-          width: 300,
-          height: 300,
-          borderRadius: "50%",
-          background: `radial-gradient(circle, ${orb3} 0%, transparent 70%)`,
+          background: `radial-gradient(circle,${accent}22 0%,transparent 68%)`,
           filter: "blur(60px)",
           pointerEvents: "none",
         }}
       />
-
-      {/* Decorative concentric rings — top-right corner */}
+      {/* Ambient glow — bottom-left */}
       <div
         style={{
           position: "absolute",
-          top: -80,
-          right: -80,
-          width: 420,
-          height: 420,
+          bottom: -120,
+          left: -80,
+          width: 360,
+          height: 360,
           borderRadius: "50%",
-          border: `1.5px solid ${accent}20`,
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: -30,
-          right: -30,
-          width: 300,
-          height: 300,
-          borderRadius: "50%",
-          border: `1px solid ${accent}12`,
+          background: `radial-gradient(circle,${accent}14 0%,transparent 70%)`,
+          filter: "blur(50px)",
           pointerEvents: "none",
         }}
       />
 
-      {/* Dot-grid overlay */}
-      <AbsoluteFill
-        style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, ${accent}20 1px, transparent 0)`,
-          backgroundSize: "38px 38px",
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* ── Content ─────────────────────────────────────────────── */}
+      {/* ── Main layout ────────────────────────────────────────────── */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between",
-          padding: "56px 80px 48px",
+          padding: "36px 52px 32px",
+          gap: 20,
         }}
       >
-        {/* TOP: Topic badge */}
-        <div>
+        {/* ── Terminal window ─────────────────────────────────────── */}
+        <div
+          style={{
+            background: "#161b22",
+            border: `1px solid #30363d`,
+            borderRadius: 10,
+            overflow: "hidden",
+            flex: "0 0 auto",
+          }}
+        >
+          {/* Title bar */}
           <div
             style={{
-              display: "inline-flex",
+              background: "#1c2128",
+              borderBottom: "1px solid #30363d",
+              padding: "10px 18px",
+              display: "flex",
               alignItems: "center",
-              gap: 10,
-              background: `${accent}18`,
-              border: `1.5px solid ${accent}50`,
-              borderRadius: 40,
-              padding: "10px 26px",
-              backdropFilter: "blur(10px)",
-              WebkitBackdropFilter: "blur(10px)",
+              gap: 12,
             }}
           >
-            {/* Accent dot */}
-            <div
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: accent,
-                boxShadow: `0 0 8px ${accent}`,
-              }}
-            />
-            <span
-              style={{
-                color: accent,
-                fontSize: 18,
-                fontWeight: 700,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-              }}
-            >
-              {label}
+            {/* Traffic lights */}
+            <div style={{ display: "flex", gap: 7 }}>
+              {["#ff5f57","#ffbd2e","#28c840"].map((col, i) => (
+                <div key={i} style={{ width: 12, height: 12, borderRadius: "50%", background: col }} />
+              ))}
+            </div>
+            <span style={{ color: "#8b949e", fontSize: 14, marginLeft: 8 }}>
+              {file}
             </span>
+          </div>
+
+          {/* Code body */}
+          <div style={{ padding: "16px 24px 14px", display: "flex", flexDirection: "column" }}>
+            {codeLines.map((line, i) => (
+              <CodeRow key={i} line={line} fontSize={codeFontSize} />
+            ))}
           </div>
         </div>
 
-        {/* MIDDLE: Headline + insight */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 28,
-            flex: 1,
-            justifyContent: "center",
-            paddingTop: 32,
-            paddingBottom: 24,
-            maxWidth: "87%",
-          }}
-        >
-          {/* Gradient accent bar */}
-          <div
-            style={{
-              width: 72,
-              height: 5,
-              borderRadius: 3,
-              background: `linear-gradient(90deg, ${accent}, ${accent}55)`,
-            }}
-          />
+        {/* ── Headline section ────────────────────────────────────── */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 16 }}>
+          {/* Comment-style topic label */}
+          <div style={{ color: C.comment, fontSize: 18, letterSpacing: "0.02em" }}>
+            <span style={{ color: accent }}>// </span>{label}
+          </div>
+
+          {/* Accent bar */}
+          <div style={{ width: 56, height: 4, borderRadius: 2, background: `linear-gradient(90deg,${accent},${accent}44)` }} />
 
           {/* Headline */}
           <div
             style={{
-              color: "#ffffff",
-              fontSize,
+              color: "#e6edf3",
+              fontSize: headlineFontSize,
               fontWeight: 800,
-              lineHeight: 1.18,
-              letterSpacing: "-0.025em",
-              textShadow: "0 4px 32px rgba(0,0,0,0.6)",
+              lineHeight: 1.2,
+              letterSpacing: "-0.02em",
+              fontFamily: "'Inter','Segoe UI',system-ui,sans-serif",
             }}
           >
             {headline}
           </div>
-
-          {/* Insight */}
-          {insight ? (
-            <div
-              style={{
-                color: "rgba(255,255,255,0.68)",
-                fontSize: 26,
-                lineHeight: 1.6,
-                maxWidth: "80%",
-                fontWeight: 400,
-                letterSpacing: "0.01em",
-              }}
-            >
-              {insight}
-            </div>
-          ) : null}
         </div>
 
-        {/* BOTTOM: Author + topic tag */}
+        {/* ── Bottom author strip ──────────────────────────────────── */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            borderTop: `1px solid ${accent}22`,
-            paddingTop: 22,
+            borderTop: `1px solid #21262d`,
+            paddingTop: 18,
           }}
         >
-          {/* Author profile */}
+          {/* Author */}
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            {/* Avatar circle */}
             <div
               style={{
-                width: 44,
-                height: 44,
+                width: 42,
+                height: 42,
                 borderRadius: "50%",
-                background: `linear-gradient(135deg, ${accent}, ${accent}66)`,
-                border: `2px solid ${accent}77`,
+                background: `linear-gradient(135deg,${accent},${accent}55)`,
+                border: `2px solid ${accent}66`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                fontSize: 17,
+                fontWeight: 800,
+                color: "#fff",
+                fontFamily: "'Inter',system-ui,sans-serif",
                 flexShrink: 0,
               }}
             >
-              <span style={{ color: "#fff", fontSize: 18, fontWeight: 800 }}>
-                {initial}
-              </span>
+              {initial}
             </div>
-
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <span
-                style={{ color: "#ffffff", fontSize: 17, fontWeight: 700 }}
-              >
+              <span style={{ color: "#e6edf3", fontSize: 16, fontWeight: 700, fontFamily: "'Inter',system-ui,sans-serif" }}>
                 {author}
               </span>
-              <span
-                style={{
-                  color: `${accent}cc`,
-                  fontSize: 14,
-                  fontWeight: 500,
-                }}
-              >
+              <span style={{ color: `${accent}cc`, fontSize: 13, fontFamily: "inherit" }}>
                 @{handle}
               </span>
             </div>
           </div>
 
-          {/* Topic tag */}
-          <div
-            style={{
-              background: `${accent}18`,
-              border: `1px solid ${accent}44`,
-              borderRadius: 10,
-              padding: "8px 20px",
-            }}
-          >
-            <span
+          {/* Prompt indicator + topic tag */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <span style={{ color: accent, fontSize: 15, opacity: 0.7 }}>▶</span>
+            <div
               style={{
+                background: `${accent}15`,
+                border: `1px solid ${accent}40`,
+                borderRadius: 8,
+                padding: "7px 18px",
                 color: accent,
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: 700,
-                letterSpacing: "0.05em",
+                letterSpacing: "0.04em",
               }}
             >
               #{label.replace(/\s+\+\s+|\s+/g, "")}
-            </span>
+            </div>
           </div>
         </div>
       </div>
