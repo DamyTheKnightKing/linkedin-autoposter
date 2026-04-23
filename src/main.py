@@ -111,6 +111,8 @@ def run(dry_run: bool = False, no_image: bool = False) -> None:
             else:
                 logger.info("Extracting image props from post…")
                 image_props = extract_image_props(post_text, topic)
+                image_props.setdefault("author", os.getenv("AUTHOR_NAME", "Dhamotharan"))
+                image_props.setdefault("handle", os.getenv("LINKEDIN_HANDLE", "theknightcodes"))
                 logger.info("Rendering image card (headline: %s)…", image_props.get("headline", ""))
                 image_path = generate_image(image_props)
         except Exception as exc:
